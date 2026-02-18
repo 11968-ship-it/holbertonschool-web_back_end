@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Module that provides a function to safely get the first element of a sequence."""
+"""Module that provides a function to safely get the first element
+of a sequence.
+"""
 
 from typing import Sequence, Any, Optional
 
