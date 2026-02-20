@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Task 4's module to spawn Tasks using task_wait_random
+This module defines an asynchronous coroutine that executes multiple
+tasks concurrently using task_wait_random and returns their delays
+in ascending order as the tasks complete.
 """
+
 import asyncio
 from typing import List
 
