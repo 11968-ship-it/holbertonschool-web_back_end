@@ -2,8 +2,11 @@
 """
 Deletion-resilient hypermedia pagination
 """
+
 import csv
+import math
 from typing import List, Dict
+
 
 class Server:
     """Server class to paginate a database of popular baby names.
@@ -15,16 +18,19 @@ class Server:
         self.__indexed_dataset = None
 
     def dataset(self) -> List[List]:
-        """Cached dataset"""
+        """Cached dataset
+        """
         if self.__dataset is None:
             with open(self.DATA_FILE) as f:
                 reader = csv.reader(f)
                 dataset = [row for row in reader]
             self.__dataset = dataset[1:]
+
         return self.__dataset
 
     def indexed_dataset(self) -> Dict[int, List]:
-        """Dataset indexed by sorting position, starting at 0"""
+        """Dataset indexed by sorting position, starting at 0
+        """
         if self.__indexed_dataset is None:
             dataset = self.dataset()
             self.__indexed_dataset = {
@@ -34,29 +40,28 @@ class Server:
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
         """
-        Returns a dictionary with pagination data, resilient to deletions.
+        Returns a dictionary with pagination info that is
+        resilient to deletions.
         """
-        indexed_data = self.indexed_dataset()
-        
-        # Verify index is in a valid range
-        assert index is None or (0 <= index < len(indexed_data) + 1000)
-        
-        if index is None:
-            index = 0
-            
+        # 1. Verify index is within valid range
+        all_data = self.indexed_dataset()
+        assert index is not None and 0 <= index < len(self.dataset())
+
         data = []
-        curr_idx = index
-        # Collect page_size items, skipping missing keys
-        count = 0
-        while count < page_size:
-            if curr_idx in indexed_data:
-                data.append(indexed_data[curr_idx])
-                count += 1
-            curr_idx += 1
-            
+        current_index = index
+        
+        # 2. Collect data items
+        # We loop until we have enough data to fill the page_size
+        while len(data) < page_size and current_index < len(self.dataset()):
+            item = all_data.get(current_index)
+            if item:
+                data.append(item)
+            current_index += 1
+
+        # 3. Construct the response
         return {
-            "index": index,
-            "data": data,
-            "page_size": page_size,
-            "next_index": curr_idx
+            'index': index,
+            'next_index': current_index,
+            'page_size': len(data),
+            'data': data
         }
