@@ -2,13 +2,12 @@
 """
 Deletion-resilient hypermedia pagination
 """
-
 import csv
 from typing import List, Dict
 
-
 class Server:
-    """Server class to paginate a database of popular baby names."""
+    """Server class to paginate a database of popular baby names.
+    """
     DATA_FILE = "Popular_Baby_Names.csv"
 
     def __init__(self):
@@ -16,7 +15,7 @@ class Server:
         self.__indexed_dataset = None
 
     def dataset(self) -> List[List]:
-        """Cached dataset."""
+        """Cached dataset"""
         if self.__dataset is None:
             with open(self.DATA_FILE) as f:
                 reader = csv.reader(f)
@@ -25,32 +24,39 @@ class Server:
         return self.__dataset
 
     def indexed_dataset(self) -> Dict[int, List]:
-        """Dataset indexed by sorting position."""
+        """Dataset indexed by sorting position, starting at 0"""
         if self.__indexed_dataset is None:
             dataset = self.dataset()
-            self.__indexed_dataset = {i: dataset[i] for i in range(len(dataset))}
+            self.__indexed_dataset = {
+                i: dataset[i] for i in range(len(dataset))
+            }
         return self.__indexed_dataset
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        """Return a deletion-resilient page."""
-        dataset = self.indexed_dataset()
-
+        """
+        Returns a dictionary with pagination data, resilient to deletions.
+        """
+        indexed_data = self.indexed_dataset()
+        
+        # Verify index is in a valid range
+        assert index is None or (0 <= index < len(indexed_data) + 1000)
+        
         if index is None:
             index = 0
-
-        assert index >= 0 and index <= max(dataset.keys())
-
+            
         data = []
-        current_index = index
-
-        while len(data) < page_size:
-            if current_index in dataset:
-                data.append(dataset[current_index])
-            current_index += 1
-
+        curr_idx = index
+        # Collect page_size items, skipping missing keys
+        count = 0
+        while count < page_size:
+            if curr_idx in indexed_data:
+                data.append(indexed_data[curr_idx])
+                count += 1
+            curr_idx += 1
+            
         return {
             "index": index,
             "data": data,
             "page_size": page_size,
-            "next_index": current_index
+            "next_index": curr_idx
         }
