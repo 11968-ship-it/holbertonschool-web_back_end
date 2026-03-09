@@ -40,28 +40,27 @@ class Server:
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
         """
         Returns a dictionary with pagination information that is 
-        resilient to deletions in the dataset.
+        resilient to deletions.
         """
-        # 1. Verify index is within valid range via assertion
-        indexed_data = self.indexed_dataset()
+        # 1. Validation
+        focus_dataset = self.indexed_dataset()
         assert index is not None and 0 <= index < len(self.dataset())
 
         data = []
         current_index = index
         
-        # 2. Iterate through the indexed dataset
-        # We continue until we have collected 'page_size' number of items
+        # 2. Collect data items
+        # We must find 'page_size' items, skipping any missing indices
         while len(data) < page_size and current_index < len(self.dataset()):
-            item = indexed_data.get(current_index)
+            item = focus_dataset.get(current_index)
             if item is not None:
                 data.append(item)
-            # We always increment current_index regardless of if item was found
             current_index += 1
 
-        # 3. Return the state of the pagination
+        # 3. Construct the response
         return {
             'index': index,
             'next_index': current_index,
-            'page_size': len(data),
+            'page_size': page_size,
             'data': data
         }
