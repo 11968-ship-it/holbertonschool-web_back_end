@@ -1,11 +1,11 @@
 export default function taskBlock(trueOrFalse) {
-  let task = false;  // outer variable
-  let task2 = true;  // outer variable
+  let task = false;   // outer variable
+  let task2 = true;   // outer variable
 
   if (trueOrFalse) {
-    task = true;      // reassign outer variable
-    task2 = false;    // reassign outer variable
+    let task = true;    // block-scoped: DOES NOT overwrite outer
+    let task2 = false;  // block-scoped: DOES NOT overwrite outer
   }
 
-  return [task, task2];
+  return [task, task2];  // outer variables unchanged
 }
